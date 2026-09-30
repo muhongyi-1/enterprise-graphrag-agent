@@ -18,6 +18,14 @@
 
 ---
 
+## 🖼️ Demo Snapshot
+
+<div align="center">
+  <img src="docs/images/demo-snapshot.svg" alt="Enterprise GraphRAG Agent Demo Snapshot" width="100%"/>
+</div>
+
+> 上图使用仓库中当前 Demo Evaluation 的真实样例结果生成，用于展示 Agent Runtime、Hybrid RAG、Graph Retrieval 与评测链路；不代表生产环境 Benchmark。
+
 ## ✨ 项目简介
 
 传统 RAG 往往只解决“**如何从文档中召回相关文本**”的问题，而一个真正可用的企业知识 Agent 还需要处理：
