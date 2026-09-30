@@ -1,0 +1,89 @@
+[
+  {
+    "id": "case_001",
+    "category": "knowledge_tool",
+    "query": "GraphRAG项目使用什么数据库保存实体关系？",
+    "expected_tool": "search_knowledge",
+    "required_tool_args": [
+      "query"
+    ],
+    "required_answer_keywords": [
+      "Neo4j"
+    ]
+  },
+
+  {
+    "id": "case_002",
+    "category": "knowledge_tool",
+    "query": "知识库使用什么技术保存向量数据？",
+    "expected_tool": "search_knowledge",
+    "required_tool_args": [
+      "query"
+    ],
+    "required_answer_keywords": [
+      "PostgreSQL",
+      "pgvector"
+    ]
+  },
+
+  {
+    "id": "case_003",
+    "category": "knowledge_tool",
+    "query": "Vector和BM25的召回结果是怎么融合的？",
+    "expected_tool": "search_knowledge",
+    "required_tool_args": [
+      "query"
+    ],
+    "required_answer_keywords": [
+      "RRF"
+    ]
+  },
+
+  {
+    "id": "case_004",
+    "category": "knowledge_tool",
+    "query": "RRF之后还会进行什么排序处理？",
+    "expected_tool": "search_knowledge",
+    "required_tool_args": [
+      "query"
+    ],
+    "required_answer_keywords": [
+      "Rerank"
+    ]
+  },
+
+  {
+    "id": "case_005",
+    "category": "knowledge_tool",
+    "query": "LangGraph在这个Agent项目里主要负责什么？",
+    "expected_tool": "search_knowledge",
+    "required_tool_args": [
+      "query"
+    ],
+    "required_answer_keywords": [
+      "LangGraph"
+    ]
+  },
+
+  {
+    "id": "case_006",
+    "category": "direct_answer",
+    "query": "1+1等于多少？",
+    "expected_tool": null,
+    "required_tool_args": [],
+    "required_answer_keywords": [
+      "2"
+    ]
+  },
+
+  {
+    "id": "case_007",
+    "category": "direct_answer",
+    "query": "Python中的list是什么？",
+    "expected_tool": null,
+    "required_tool_args": [],
+    "required_answer_keywords": [
+      "列表"
+    ]
+  }
+]
