@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop offset="0%" stop-color="#2f81f7"/>
+      <stop offset="100%" stop-color="#8957e5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="620" rx="28" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="8" fill="url(#accent)"/>
+
+  <text x="56" y="72" fill="#f0f6fc" font-size="32" font-weight="700"
+        font-family="Arial, Helvetica, sans-serif">Enterprise GraphRAG Agent · Demo Snapshot</text>
+  <text x="56" y="108" fill="#8b949e" font-size="17"
+        font-family="Arial, Helvetica, sans-serif">Agent Runtime · Hybrid RAG · Graph Retrieval · Memory · Evaluation</text>
+
+  <!-- workflow panel -->
+  <rect x="52" y="145" width="1096" height="180" rx="20" fill="#161b22" stroke="#30363d" filter="url(#shadow)"/>
+  <text x="82" y="182" fill="#58a6ff" font-size="19" font-weight="700"
+        font-family="Arial, Helvetica, sans-serif">Runtime Flow</text>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-size="15" text-anchor="middle">
+    <rect x="82" y="215" width="125" height="54" rx="14" fill="#21262d" stroke="#388bfd"/>
+    <text x="144" y="248" fill="#f0f6fc">User Query</text>
+
+    <path d="M207 242 H255" stroke="#8b949e" stroke-width="2"/>
+    <polygon points="255,242 245,236 245,248" fill="#8b949e"/>
+
+    <rect x="255" y="215" width="145" height="54" rx="14" fill="#21262d" stroke="#a371f7"/>
+    <text x="327" y="248" fill="#f0f6fc">LangGraph Agent</text>
+
+    <path d="M400 242 H448" stroke="#8b949e" stroke-width="2"/>
+    <polygon points="448,242 438,236 438,248" fill="#8b949e"/>
+
+    <rect x="448" y="215" width="150" height="54" rx="14" fill="#21262d" stroke="#3fb950"/>
+    <text x="523" y="248" fill="#f0f6fc">search_knowledge</text>
+
+    <path d="M598 242 H646" stroke="#8b949e" stroke-width="2"/>
+    <polygon points="646,242 636,236 636,248" fill="#8b949e"/>
+
+    <rect x="646" y="195" width="185" height="42" rx="12" fill="#0d4429" stroke="#3fb950"/>
+    <text x="738" y="222" fill="#aff5b4">Vector + BM25 → RRF</text>
+    <rect x="646" y="247" width="185" height="42" rx="12" fill="#1f3d5c" stroke="#58a6ff"/>
+    <text x="738" y="274" fill="#a5d6ff">Neo4j Graph Retrieval</text>
+
+    <path d="M831 242 H879" stroke="#8b949e" stroke-width="2"/>
+    <polygon points="879,242 869,236 869,248" fill="#8b949e"/>
+
+    <rect x="879" y="215" width="135" height="54" rx="14" fill="#21262d" stroke="#d29922"/>
+    <text x="946" y="239" fill="#f0f6fc">Evidence</text>
+    <text x="946" y="258" fill="#8b949e" font-size="12">Text + Graph</text>
+
+    <path d="M1014 242 H1058" stroke="#8b949e" stroke-width="2"/>
+    <polygon points="1058,242 1048,236 1048,248" fill="#8b949e"/>
+
+    <rect x="1058" y="215" width="70" height="54" rx="14" fill="#21262d" stroke="#f778ba"/>
+    <text x="1093" y="248" fill="#f0f6fc">LLM</text>
+  </g>
+
+  <!-- metric cards -->
+  <text x="56" y="374" fill="#f0f6fc" font-size="21" font-weight="700"
+        font-family="Arial, Helvetica, sans-serif">Evaluation Snapshot</text>
+  <text x="56" y="402" fill="#8b949e" font-size="14"
+        font-family="Arial, Helvetica, sans-serif">Current demo dataset · 7 cases · sample run stored in eval/agent_eval_results.json</text>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="52" y="432" width="205" height="130" rx="18" fill="#161b22" stroke="#30363d"/>
+    <text x="76" y="465" fill="#8b949e" font-size="14">Tool Selection</text>
+    <text x="76" y="518" fill="#3fb950" font-size="38" font-weight="700">100%</text>
+    <text x="76" y="544" fill="#6e7681" font-size="13">7 / 7 cases</text>
+
+    <rect x="274" y="432" width="205" height="130" rx="18" fill="#161b22" stroke="#30363d"/>
+    <text x="298" y="465" fill="#8b949e" font-size="14">Tool Arguments</text>
+    <text x="298" y="518" fill="#3fb950" font-size="38" font-weight="700">100%</text>
+    <text x="298" y="544" fill="#6e7681" font-size="13">required args valid</text>
+
+    <rect x="496" y="432" width="205" height="130" rx="18" fill="#161b22" stroke="#30363d"/>
+    <text x="520" y="465" fill="#8b949e" font-size="14">Task Completion</text>
+    <text x="520" y="518" fill="#3fb950" font-size="38" font-weight="700">100%</text>
+    <text x="520" y="544" fill="#6e7681" font-size="13">keyword-based demo judge</text>
+
+    <rect x="718" y="432" width="205" height="130" rx="18" fill="#161b22" stroke="#30363d"/>
+    <text x="742" y="465" fill="#8b949e" font-size="14">Overall Pass</text>
+    <text x="742" y="518" fill="#3fb950" font-size="38" font-weight="700">100%</text>
+    <text x="742" y="544" fill="#6e7681" font-size="13">sample evaluation run</text>
+
+    <rect x="940" y="432" width="208" height="130" rx="18" fill="#161b22" stroke="#30363d"/>
+    <text x="964" y="465" fill="#8b949e" font-size="14">Average Latency</text>
+    <text x="964" y="518" fill="#58a6ff" font-size="34" font-weight="700">1920.89 ms</text>
+    <text x="964" y="544" fill="#6e7681" font-size="13">environment-dependent</text>
+  </g>
+
+  <text x="56" y="598" fill="#6e7681" font-size="12"
+        font-family="Arial, Helvetica, sans-serif">Prototype metrics are for pipeline verification only, not production benchmarks.</text>
+</svg>
