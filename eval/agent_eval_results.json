@@ -1,0 +1,113 @@
+{
+  "summary": {
+    "total_cases": 7,
+    "tool_selection_accuracy": 1.0,
+    "tool_argument_accuracy": 1.0,
+    "task_completion_rate": 1.0,
+    "overall_pass_rate": 1.0,
+    "average_latency_ms": 1920.89
+  },
+  "results": [
+    {
+      "id": "case_001",
+      "category": "knowledge_tool",
+      "query": "GraphRAG项目使用什么数据库保存实体关系？",
+      "expected_tool": "search_knowledge",
+      "actual_tools": [
+        "search_knowledge"
+      ],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 2509.56,
+      "answer": "**GraphRAG 项目使用 Neo4j 图数据库保存实体及实体之间的关系。**\n\n根据知识库中的《GraphRAG架构文档》(doc_001, Graph Storage 章节)：\n\n- **Neo4j** 负责知识图谱存储，主要承担**实体关系存储**和**多跳关系查询**能力。\n\n补充说明，避免混淆：项目中的向量存储是另一套组件——企业知识库使用 **PostgreSQL + pgvector** 保存文本 Embedding 向量，用于向量相似度语义检索（doc_002）。两者分工不同：Neo4j 管图谱关系，pgvector 管向量检索。"
+    },
+    {
+      "id": "case_002",
+      "category": "knowledge_tool",
+      "query": "知识库使用什么技术保存向量数据？",
+      "expected_tool": "search_knowledge",
+      "actual_tools": [
+        "search_knowledge"
+      ],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 1901.3,
+      "answer": "根据企业知识库文档，向量数据的存储方案如下：\n\n**向量数据存储：PostgreSQL + pgvector**\n\n- 企业知识库使用 **PostgreSQL** 配合 **pgvector** 扩展来保存文本 Embedding 向量，并通过向量相似度完成语义检索。（来源：RAG技术设计文档 · Vector Store）\n\n**补充说明（不同用途的存储分工）：**\n\n| 存储组件 | 用途 |\n|---|---|\n| PostgreSQL + pgvector | 保存文本 Embedding 向量，做语义检索 |\n| Neo4j | 保存实体及实体间关系，承担知识图谱存储与多跳关系查询 |\n\n也就是说，**向量数据由 pgvector 负责**，而 Neo4j 负责的是图结构数据，两者职责不同。"
+    },
+    {
+      "id": "case_003",
+      "category": "knowledge_tool",
+      "query": "Vector和BM25的召回结果是怎么融合的？",
+      "expected_tool": "search_knowledge",
+      "actual_tools": [
+        "search_knowledge"
+      ],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 2627.63,
+      "answer": "根据企业知识库中的《RAG技术设计文档》，融合方式如下：\n\n**1. 多路召回**\n- **Vector Search**：负责语义相似检索\n- **BM25**：负责关键词、编号、专有名词的精确匹配\n\n**2. 融合算法：RRF（Reciprocal Rank Fusion）**\n- 两路检索结果通过 RRF 算法融合\n- 核心目的是**避免直接比较两个检索器不同量纲的原始分数**（向量相似度分数与 BM25 分数不可直接相加或比较），而是基于排名进行融合\n\n**3. 融合后的处理**\n- RRF 融合后得到候选文档集合\n- 再交给 **Cross Encoder Reranker**，对 Query 和 Document 联合编码并重新排序\n- 最终选取 **Top-K** 文档\n\n整体链路：`Vector + BM25 多路召回 → RRF 融合 → Cross Encoder Rerank → Top-K`\n\n（以上内容均来自知识库证据，未做额外推断。）"
+    },
+    {
+      "id": "case_004",
+      "category": "knowledge_tool",
+      "query": "RRF之后还会进行什么排序处理？",
+      "expected_tool": "search_knowledge",
+      "actual_tools": [
+        "search_knowledge"
+      ],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 2005.23,
+      "answer": "根据企业知识库（RAG技术设计文档 · Rerank 章节）：\n\n**RRF 之后会进行 Rerank（重排序）处理**，具体流程是：\n\n1. **RRF 融合**：Vector Search 和 BM25 的排序结果通过 RRF（Reciprocal Rank Fusion）算法融合，得到候选文档集合，避免直接比较两个检索器不同量纲的原始分数。\n2. **Cross Encoder Rerank**：对融合后的候选文档，使用 **Cross Encoder Reranker** 将 Query 和 Document 进行**联合编码**，重新计算相关性并排序。\n3. **Top-K 截断**：最后选择 Top-K 文档作为最终结果。\n\n简言之：**RRF 融合 → Cross Encoder 重排序 → 取 Top-K**。"
+    },
+    {
+      "id": "case_005",
+      "category": "knowledge_tool",
+      "query": "LangGraph在这个Agent项目里主要负责什么？",
+      "expected_tool": "search_knowledge",
+      "actual_tools": [
+        "search_knowledge"
+      ],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 2179.97,
+      "answer": "根据企业知识库（doc_006《Agent架构设计文档》），LangGraph 在这个 Agent 项目中主要负责**工作流编排**，具体包括三点：\n\n1. **State（状态）**：保存 Agent 的运行状态。\n2. **Node（节点）**：执行具体任务。\n3. **Conditional Edge（条件边）**：决定是否进入 ToolNode，即控制流程的分支走向。\n\n简单说，LangGraph 是这套 Agent 的流程调度骨架——用 State 承载上下文、用 Node 干活、用条件边决定\"要不要调工具\"。\n\n补充一点相关背景（doc_007）：Agent 的记忆分为短期记忆（当前 Thread 内的对话状态）和长期 Memory（跨 Thread 的用户偏好、长期事实与关键决策），这部分与 LangGraph 的状态管理是配套的。\n\n如果你还想了解 Neo4j、pgvector、BM25/RRF/Rerank 等环节，我可以继续查。"
+    },
+    {
+      "id": "case_006",
+      "category": "direct_answer",
+      "query": "1+1等于多少？",
+      "expected_tool": null,
+      "actual_tools": [],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 468.9,
+      "answer": "1+1 = 2。\n\n这是一个普通常识问题，不需要查询企业知识库。"
+    },
+    {
+      "id": "case_007",
+      "category": "direct_answer",
+      "query": "Python中的list是什么？",
+      "expected_tool": null,
+      "actual_tools": [],
+      "tool_selection_correct": true,
+      "tool_arguments_correct": true,
+      "task_completed": true,
+      "passed": true,
+      "latency_ms": 1753.66,
+      "answer": "Python 中的 `list`（列表）是一种**有序、可变、可重复**的内置序列类型。\n\n主要特点：\n\n- **有序**：元素按插入顺序保存，可通过索引访问，如 `lst[0]`。\n- **可变**：可以增删改元素，如 `append`、`insert`、`pop`、`remove`。\n- **可重复**：允许存在相同值的元素。\n- **可混合类型**：一个列表里可以放不同类型的数据，如 `[1, \"a\", 3.14, True]`。\n- **支持切片**：如 `lst[1:3]`。\n- **动态扩容**：无需预先声明长度。\n\n示例：\n\n```python\nnums = [1, 2, 3]\nnums.append(4)      # [1, 2, 3, 4]\nnums[0] = 100       # [100, 2, 3, 4]\nprint(nums[1:3])    # [2, 3]\n```\n\n常见操作复杂度（平均）：\n\n- 索引访问：O(1)\n- 尾部追加 `append`：O(1)\n- 中间插入/删除：O(n)\n- 查找元素 `in`：O(n)\n\n如果你问的是某个企业内部项目里对 list 的具体用法或实现，可以告诉我，我再帮你查知识库。"
+    }
+  ]
+}
