@@ -1,104 +1,173 @@
+<div align="center">
+
 # Enterprise GraphRAG Agent
 
-面向企业知识库场景的 Agent 工程化原型，基于 **FastAPI + LangGraph + DeepSeek** 构建，组合 Hybrid RAG、Neo4j Graph Retrieval、Short/Long-term Memory、Context Engineering、Reliability、Observability 与 Evaluation。
+**面向企业知识库场景的工程化智能 Agent**
 
-> 当前仓库用于学习、验证与面试展示。部分组件采用本地 / In-Memory 实现，README 中会明确标注当前实现与生产化方向。
+基于 **FastAPI + LangGraph + DeepSeek**，融合 **Hybrid RAG、Neo4j Graph Retrieval、Memory、Context Engineering、Reliability、Observability 与 Agent Evaluation**。
 
-## 1. 核心能力
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11%2B-blue" alt="Python"/>
+  <img src="https://img.shields.io/badge/FastAPI-Agent%20API-009688" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/LangGraph-Agent%20Runtime-6f42c1" alt="LangGraph"/>
+  <img src="https://img.shields.io/badge/Neo4j-GraphRAG-018bff" alt="Neo4j"/>
+  <img src="https://img.shields.io/badge/Status-Engineering%20Prototype-orange" alt="Status"/>
+</p>
 
-- **Agent Runtime**：LangGraph State / Node / Conditional Edge / ToolNode
-- **Tool Calling**：普通问题直接回答，企业知识问题动态调用 `search_knowledge`
-- **Hybrid RAG**：Vector Search + BM25 → RRF → Cross Encoder Rerank → Top-K
-- **GraphRAG**：Neo4j 实体关系检索，与 Text Evidence 联合打包
-- **Memory**：`thread_id` 级 Short-term Memory + `user_id` 级 Long-term Memory
-- **Context Engineering**：统一组织 System Prompt、History、Memory、Tool Result 与 Current Query
-- **Reliability**：Timeout / Retry / Exponential Backoff / Semaphore / Graceful Degradation
-- **Observability**：Structured Logging、request_id、Prometheus Metrics
-- **Evaluation**：Tool Selection / Tool Argument / Task Completion / Overall Pass / Latency
+</div>
 
-## 2. 整体链路
+---
 
-```text
-User
-  ↓
-FastAPI
-  ↓
-LangGraph Agent
-  ↓
-ContextManager
-  ↓
-LLM
-  ↓
-Tool Calling
-  ↓
-search_knowledge
-  ↓
-┌───────────────────────┬───────────────────────┐
-│ Hybrid Text Retrieval │ Neo4j Graph Retrieval │
-│ Vector + BM25         │ Entity / Relation     │
-│       ↓               │       ↓               │
-│      RRF              │ Graph Evidence        │
-│       ↓               │                       │
-│ Cross Encoder Rerank  │                       │
-│       ↓               │                       │
-│ Text Evidence         │                       │
-└───────────┬───────────┴───────────┬───────────┘
-            ↓
-       Context Packing
-            ↓
-        ToolMessage
-            ↓
-           LLM
-            ↓
-      Final Answer
+## ✨ 项目简介
+
+传统 RAG 往往只解决“**如何从文档中召回相关文本**”的问题，而一个真正可用的企业知识 Agent 还需要处理：
+
+- 如何让 LLM **自主判断是否调用工具**
+- 如何同时利用 **语义检索、关键词检索与实体关系**
+- 如何管理 **多轮会话与跨会话长期信息**
+- 如何控制 **上下文冲突与 Token Budget**
+- 如何面对 **LLM / Neo4j / 外部服务异常**
+- 如何通过 **日志、指标和 Evaluation** 定位 Agent Bad Case
+
+本项目围绕这些问题，搭建了一条完整的 Agent Engineering Pipeline：
+
+> **Agent Runtime → Hybrid RAG → GraphRAG → Memory → Context → Reliability → Observability → Evaluation**
+
+---
+
+## 🚀 核心亮点
+
+| 模块 | 实现 |
+|---|---|
+| **Agent Runtime** | 基于 LangGraph 构建 `Agent → Tool → Observation → Agent` 状态流，由 LLM 动态决定直接回答或调用知识库 |
+| **Hybrid RAG** | Vector Search + BM25 双路召回，RRF 融合，Cross Encoder Rerank，输出 Top-K Evidence |
+| **GraphRAG** | 使用 Neo4j 检索实体、关系与关系路径，将 Graph Evidence 与 Text Evidence 联合提供给 LLM |
+| **Memory** | `thread_id` 级 Short-term Memory + `user_id` 级 Long-term Memory |
+| **Context Engineering** | 统一组装 System Prompt、History、Memory、Tool Result 与 Current Query，并处理信息优先级 |
+| **Reliability** | Timeout、Retry、Exponential Backoff、Semaphore、Graceful Degradation |
+| **Observability** | request_id / user_id / thread_id 全链路上下文 + Prometheus Metrics |
+| **Evaluation** | Tool Selection、Tool Argument、Task Completion、Overall Pass Rate、Latency |
+
+---
+
+## 🧠 系统架构
+
+```mermaid
+flowchart TD
+    U[User] --> API[FastAPI]
+    API --> A[LangGraph Agent]
+
+    A --> CM[ContextManager]
+    CM --> LLM[LLM / DeepSeek]
+
+    LLM -->|Direct Answer| OUT[Final Answer]
+    LLM -->|Tool Call| TOOL[search_knowledge]
+
+    TOOL --> TXT[Hybrid Text Retrieval]
+    TOOL --> GRAPH[Neo4j Graph Retrieval]
+
+    TXT --> V[Vector Search]
+    TXT --> B[BM25]
+    V --> RRF[RRF Fusion]
+    B --> RRF
+    RRF --> RR[Cross Encoder Rerank]
+    RR --> TE[Text Evidence]
+
+    GRAPH --> GE[Graph Evidence]
+
+    TE --> PACK[Context Packing]
+    GE --> PACK
+    PACK --> TM[ToolMessage]
+    TM --> LLM
+
+    ST[Short-term Memory] --> CM
+    LT[Long-term Memory] --> CM
+
+    REL[Reliability] -.-> LLM
+    REL -.-> TOOL
+    OBS[Observability] -.-> API
+    OBS -.-> LLM
+    OBS -.-> TOOL
 ```
 
-## 3. 当前实现说明
+---
 
-### 3.1 Vector Retrieval
+## 🔍 Hybrid RAG
 
-当前使用 `sentence-transformers` 的 `BAAI/bge-small-zh-v1.5`：
-
-- 启动时对 Demo 文档做 Embedding
-- 向量保存在当前进程内存
-- Query Embedding 与文档向量通过余弦相似度召回
-
-生产化可以进一步替换为 pgvector / Milvus / Elasticsearch Vector 等持久化向量存储。
-
-### 3.2 BM25 + RRF + Rerank
-
-- BM25：`rank-bm25`
-- 中文分词：`jieba`
-- 融合：Reciprocal Rank Fusion（RRF）
-- 精排：Cross Encoder Reranker
-
-整体：
+检索部分不是单一路 Vector Search，而是采用多阶段检索：
 
 ```text
-Vector Recall + BM25 Recall
-          ↓
-         RRF
-          ↓
-   Candidate Documents
-          ↓
- Cross Encoder Rerank
-          ↓
-        Top-K
+Query
+  ↓
+Vector Search + BM25
+  ↓
+Recall
+  ↓
+RRF Fusion
+  ↓
+Candidate Documents
+  ↓
+Cross Encoder Rerank
+  ↓
+Top-K Text Evidence
 ```
 
-### 3.3 Graph Retrieval
+### 为什么这样设计？
 
-当前 Graph Retrieval 使用 Neo4j：
+**Vector Search** 更擅长语义相似；**BM25** 对关键词、缩写、编号和专有名词更敏感。
 
-- 从 Query 中抽取当前 Demo 支持的实体关键词
-- 查询匹配节点及其相邻关系
-- 将 `source / relation / target` 打包为 Graph Evidence
+两路结果不能简单直接相加，因为原始 Score 的量纲不同，因此使用 **RRF（Reciprocal Rank Fusion）** 基于排名进行融合；融合后再使用 **Cross Encoder** 对较小候选集进行精排，在效果与计算成本之间取得平衡。
 
-Neo4j 不可用时返回空 Graph Results，由 Text RAG 继续完成问答，避免图数据库成为系统单点依赖。
+---
 
-### 3.4 Short-term Memory
+## 🕸️ GraphRAG
 
-使用 LangGraph `InMemorySaver`：
+Hybrid Text RAG 之外，项目同时接入 Neo4j：
+
+```text
+                Query
+                  │
+       ┌──────────┴──────────┐
+       ▼                     ▼
+Hybrid Text RAG       Graph Retrieval
+       │                     │
+Text Evidence         Graph Evidence
+       └──────────┬──────────┘
+                  ▼
+           Context Packing
+                  ▼
+                 LLM
+```
+
+Graph Retrieval 当前用于显式表达：
+
+- Entity
+- Relation
+- Target Entity
+- Relationship Path
+
+### Graceful Degradation
+
+Neo4j 被设计为**增强链路，而不是单点强依赖**：
+
+```text
+Neo4j available
+→ Text RAG + Graph Retrieval
+
+Neo4j unavailable
+→ Graph Results = []
+→ Text RAG continues
+```
+
+因此即使图数据库异常，核心知识问答能力仍可继续工作。
+
+---
+
+## 🧩 Memory & Context Engineering
+
+### Short-term Memory
+
+使用 LangGraph Checkpointer：
 
 ```python
 config = {
@@ -108,49 +177,163 @@ config = {
 }
 ```
 
-相同 `thread_id` 可以恢复同一会话历史；不同 thread 相互隔离。
+相同 `thread_id` 可以恢复当前会话历史，不同 Thread 相互隔离。
 
-> `InMemorySaver` 仅适用于当前进程，本地开发时不要依赖 `--reload` 保留历史。生产环境应替换为持久化 Checkpointer。
+> 当前使用 `InMemorySaver`，适合本地原型验证；服务重启或进程切换后状态会丢失。
 
-### 3.5 Long-term Memory
+### Long-term Memory
 
-当前 Long-term Memory 也是 **In-Memory 原型**：
+Long-term Memory 按 `user_id` 管理结构化用户信息：
 
-- 以 `user_id` 区分用户
-- 使用结构化 `key / value / importance`
-- 同 key 采用 Upsert
-- ContextManager 根据 Query 检索 Top-K Memory
+```text
+user_id
+  ↓
+key / value / importance
+  ↓
+Upsert
+```
 
-生产化可进一步迁移至 PostgreSQL / Redis / Vector Store。
+当前为 In-Memory 原型，生产环境可进一步迁移到 PostgreSQL / Redis / Vector Store。
 
-## 4. 项目目录
+### Context 优先级
+
+```text
+Current User Input
+        >
+Recent Conversation
+        >
+Long-term Memory
+```
+
+ContextManager 负责：
+
+```text
+Gather → Resolve → Budget → Assemble
+```
+
+避免旧 Memory 覆盖用户当前明确指令。
+
+---
+
+## 🛡️ Reliability
+
+对 LLM 与外部依赖统一封装：
+
+- **Timeout**：避免下游请求无限等待
+- **Retry**：处理瞬时网络异常、限流、部分服务端错误
+- **Exponential Backoff**：避免故障期间高频重试
+- **Semaphore**：控制单实例最大并发
+- **Graceful Degradation**：增强模块异常时优先保留核心能力
+
+```text
+Agent
+  ↓
+Semaphore
+  ↓
+Timeout
+  ↓
+LLM / Tool
+  ↓ failed
+Retry + Backoff
+  ↓
+Fallback / Degradation
+```
+
+---
+
+## 📊 Observability
+
+通过 ContextVar 将以下信息贯穿请求链路：
+
+```text
+request_id / user_id / thread_id
+```
+
+可关联：
+
+```text
+HTTP → Agent → LLM → Tool → RAG
+```
+
+Prometheus Metrics 覆盖：
+
+- HTTP Requests / Latency
+- LLM Calls / Latency
+- Tool Calls / Latency
+
+Metrics Endpoint：
+
+```text
+GET /metrics
+```
+
+---
+
+## 🧪 Agent Evaluation
+
+项目提供独立 Evaluation Pipeline：
+
+```bash
+python -m eval.evaluate_agent
+```
+
+当前指标：
+
+| Metric | Demo Result |
+|---|---:|
+| Tool Selection Accuracy | **100%** |
+| Tool Argument Accuracy | **100%** |
+| Task Completion Rate | **100%** |
+| Overall Pass Rate | **100%** |
+| Average Latency | **1920.89 ms** |
+| Evaluation Cases | **7** |
+
+> 以上数据来自仓库中当前 Demo Evaluation Dataset 的一次样例运行，仅用于验证评测链路，并不代表大规模生产效果。
+
+Evaluation 不只判断最终答案，还会拆解：
+
+```text
+Tool Selection
+      ↓
+Tool Arguments
+      ↓
+Task Completion
+      ↓
+End-to-End Result
+```
+
+这样可以区分“LLM 最终回答错”究竟来自 Tool 决策、参数生成、Retrieval 还是最终生成阶段。
+
+---
+
+## 📁 项目结构
 
 ```text
 enterprise-graphrag-agent/
 ├── app/
-│   ├── agent/          # LangGraph State / Graph / Agent Node
+│   ├── agent/          # LangGraph State / Node / Graph
 │   ├── api/            # FastAPI Chat API
 │   ├── core/           # Config / Reliability / Observability
-│   ├── memory/         # Short/Long-term Memory 与 ContextManager
+│   ├── memory/         # Long-term Memory / ContextManager
 │   ├── rag/            # Vector / BM25 / RRF / Rerank / Graph Retrieval
 │   ├── schemas/        # Pydantic Schema
 │   ├── services/       # LLM / Neo4j Client
-│   ├── tools/          # search_knowledge Tool
+│   ├── tools/          # search_knowledge
 │   └── main.py
 ├── eval/               # Agent Evaluation
-├── scripts/            # Neo4j Seed Script
-├── tests/              # 手工验证脚本
+├── scripts/            # Neo4j Seed
+├── tests/              # Manual Verification
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
 
-## 5. 环境配置
+---
 
-### 5.1 Python
+## ⚡ Quick Start
 
-建议 Python 3.11+。
+### 1. 创建虚拟环境
 
 ```bash
 python -m venv .venv
@@ -162,21 +345,15 @@ Windows PowerShell：
 .\.venv\Scripts\Activate.ps1
 ```
 
-安装依赖：
+### 2. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5.2 环境变量
+### 3. 配置环境变量
 
-复制：
-
-```bash
-cp .env.example .env
-```
-
-Windows 可以直接复制文件，然后填写：
+复制 `.env.example` 为 `.env`：
 
 ```env
 DEEPSEEK_API_KEY=your_deepseek_api_key
@@ -188,37 +365,39 @@ NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=your_neo4j_password
 ```
 
-> `.env` 已加入 `.gitignore`，不要把真实 Key 或密码提交到仓库。
+> 请勿将真实 API Key 或密码提交到 Git。
 
-## 6. Neo4j
-
-启动本地 Neo4j 后，执行：
+### 4. 初始化 Neo4j Demo 数据
 
 ```bash
 python scripts/seed_neo4j.py
 ```
 
-用于写入 Demo 图谱数据。
-
-Neo4j 未启动时，Graph Retrieval 会降级，Text RAG 仍可工作。
-
-## 7. 启动服务
-
-为了避免 `InMemorySaver` 在 reload 进程切换时丢失状态，本地验证 Memory 时建议：
+### 5. 启动 Agent API
 
 ```bash
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
-服务地址：
+本地验证 Short-term Memory 时不建议使用 `--reload`，因为当前 Checkpointer 为进程内 `InMemorySaver`。
 
-- Swagger: `http://127.0.0.1:8001/docs`
-- Health: `http://127.0.0.1:8001/health`
-- Metrics: `http://127.0.0.1:8001/metrics`
+---
 
-## 8. API 示例
+## 🔌 API
 
-### POST `/chat`
+### Health
+
+```http
+GET /health
+```
+
+### Chat
+
+```http
+POST /chat
+```
+
+Request：
 
 ```json
 {
@@ -236,103 +415,141 @@ Response：
 }
 ```
 
-## 9. Demo 场景
+Swagger：
 
-### Hybrid RAG
+```text
+http://127.0.0.1:8001/docs
+```
+
+---
+
+## 🎬 推荐 Demo
+
+### Demo 1 — Hybrid RAG
 
 ```text
 GraphRAG项目的检索流程是什么？
 ```
 
-用于验证 Vector + BM25 + RRF + Rerank。
+验证：
 
-### Graph Retrieval
+```text
+Vector + BM25 → RRF → Rerank
+```
+
+### Demo 2 — Graph Retrieval
 
 ```text
 GraphRAG中的实体关系存储在哪里？
 ```
 
-Neo4j 正常时可同时获得 Text Evidence 与 Graph Evidence。
+Neo4j 正常时，同时观察 Text Results 与 Graph Results。
 
-### Short-term Memory
+### Demo 3 — Neo4j Degradation
 
-第一轮：
-
-```text
-我正在开发一个GraphRAG项目。
-```
-
-第二轮保持同一 `thread_id`：
+关闭 Neo4j 后再次询问企业知识问题：
 
 ```text
-我刚才说我正在开发什么项目？
+Graph Results = 0
+Text Results > 0
 ```
 
-### Thread Isolation
+用于验证 Text RAG 的降级能力。
 
-更换 `thread_id` 后，不应该继承上一 Thread 的 Short-term History。
+### Demo 4 — Short-term Memory
 
-## 10. Reliability
-
-LLM 调用封装：
-
-- Timeout
-- Retry
-- Exponential Backoff
-- Semaphore
-- Graceful Degradation
-
-只对适合重试的瞬时异常进行 Retry，避免 Authentication / Bad Request 等确定性错误产生无效重试。
-
-## 11. Observability
-
-使用 ContextVar 贯穿：
+同一 `thread_id`：
 
 ```text
-request_id / user_id / thread_id
+Round 1: 我正在开发一个 GraphRAG 项目。
+Round 2: 我刚才说我正在开发什么项目？
 ```
 
-Prometheus Metrics 覆盖：
+### Demo 5 — Thread Isolation
 
-- HTTP Requests / Latency
-- LLM Calls / Latency
-- Tool Calls / Latency
+更换新的 `thread_id` 后，不应继承上一 Thread 的 Short-term History。
 
-## 12. Agent Evaluation
+---
 
-运行：
+## 💡 关键工程取舍
 
-```bash
-python -m eval.evaluate_agent
-```
+### 为什么用 RRF，而不是直接相加 Score？
 
-当前指标：
+Vector 与 BM25 的原始分值尺度不同；RRF 使用排名融合，无需强行对异构 Retriever 的 Score 做统一标定。
 
-- Tool Selection Accuracy
-- Tool Argument Accuracy
-- Task Completion Rate
-- Overall Pass Rate
-- Average Latency
+### 为什么先 Recall 再 Cross Encoder？
 
-仓库中保留一份 Demo Evaluation Dataset 和一次示例评测结果，方便理解评测流程；结果会受模型、网络和环境影响。
+Cross Encoder 精度较高但计算成本更大，因此只对 Recall 后的小规模候选集做精排。
 
-## 13. 当前限制
+### 为什么 Neo4j 不作为强依赖？
 
-这是一个工程化学习原型，当前限制包括：
+Graph Retrieval 是增强能力。图服务异常时退化到 Text RAG，可以避免单个外部组件拖垮整个 Agent。
 
-- Vector Store 目前为进程内 Embedding，而非持久化 pgvector
+### 为什么 Memory 和 Context 分开？
+
+Memory 是“可复用的信息存储”，Context 是“当前这一轮真正送给模型的信息”。二者分离后才能进行相关性筛选、冲突处理和 Token Budget 控制。
+
+---
+
+## ⚠️ 当前限制
+
+当前仓库定位为工程原型，仍有以下限制：
+
+- Vector Retrieval 当前使用进程内 Embedding，而非持久化 Vector DB
 - Short-term Memory 使用 `InMemorySaver`
 - Long-term Memory 使用进程内 Store
-- Graph Entity Extraction 目前为 Demo 关键词匹配
+- Graph Entity Extraction 当前为 Demo 关键词匹配
 - Demo 知识库规模较小
-- Evaluation Dataset 规模较小
+- Evaluation Dataset 当前只有 7 个 Demo Cases
 
-## 14. 可继续扩展
+README 中明确保留这些限制，避免将 Prototype 描述成生产系统。
 
-- Persistent Checkpointer
-- pgvector / Milvus 等持久化 Vector Store
-- LLM Structured Entity Extraction / Entity Linking
-- Multi-hop Graph Retrieval
-- Memory Conflict Resolution
-- Token Budget / Context Compression
-- Tracing 与更完整的线上 Evaluation
+---
+
+## 🗺️ Roadmap
+
+- [ ] Persistent LangGraph Checkpointer
+- [ ] pgvector / Milvus 持久化 Vector Store
+- [ ] LLM Structured Entity Extraction / Entity Linking
+- [ ] Multi-hop Graph Retrieval
+- [ ] Memory Conflict Resolution
+- [ ] Context Token Budget / Compression
+- [ ] Agent Tracing
+- [ ] 更大规模 Evaluation Dataset
+- [ ] LLM-as-a-Judge / Groundedness Evaluation
+
+---
+
+## 🎯 项目定位
+
+这个项目重点不是单独实现一个 RAG 算法，而是实践一个完整的 **AI Agent Engineering Pipeline**：
+
+```text
+LLM
+ +
+Agent Runtime
+ +
+Hybrid RAG
+ +
+Graph Retrieval
+ +
+Memory
+ +
+Context Engineering
+ +
+Reliability
+ +
+Observability
+ +
+Evaluation
+```
+
+适合作为 **Agent Developer / AI Application Engineer / LLM Application Engineer** 方向的工程实践项目。
+
+---
+
+<div align="center">
+
+**If this project helps you understand Agent Engineering, feel free to explore the code.**
+
+</div>
