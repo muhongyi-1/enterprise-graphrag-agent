@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/Status-Engineering%20Prototype-orange" alt="Status"/>
 </p>
 
+<p><a href="docs/Muhongyi_Project_Portfolio.pdf">📄 牟洪毅项目作品集（PDF）</a> · GraphRAG Agent / Deep Research Agent / RailFlow</p>
+
 </div>
 
 ---
